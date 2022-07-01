@@ -1,0 +1,518 @@
+---
+title: "Heart Attack Prediction"
+author: "Hendi Kurniawan, Prajudi William Chrisdeardo (Willy)"
+date: "4/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Description
+
+The topic of the dataset I chose was about heart attack prediction. Heart disease is among the top 10 deadliest diseases in the world, according to the WHO. The method I use for topics is to use classification. To download the dataset, please click [here.](https://www.kaggle.com/rashikrahmanpritom/heart-attack-analysis-prediction-dataset)
+
+The report is structured as follows:  
+1. Data Extraction  
+2. Exploratory Data Analysis (EDA)  
+3. Data Preparation  
+4. Modeling  
+5. Evaluation  
+6. Recommendation  
+
+# 1. Data Extraction 
+
+Import necessary libraries.
+
+```{r}
+rm(list = ls())
+```
+
+# 1.1. Read Data
+
+Create and read data frames that we create.
+
+```{r}
+# Read data
+heart_df <- read.csv("C:/Users/lenovo/Documents/tugasprojek/data/heart.csv")
+```
+
+# 1.2. Structure of Data Frame
+
+Create a data frame structure.
+
+```{r}
+# Structure of Data Frame
+str (heart_df)
+```
+
+# 1.3. Data Dimension
+
+Create dimensional data.
+
+```{r}
+# Data Dimension
+d <- dim(heart_df)
+m <- d[1] # m : number of rows
+n <- d[2] # n : number of columns
+```
+
+Make summaries.
+
+```{r}
+# Statistical Summary
+summary(heart_df)
+```
+
+# 2. Exploratory Data Analysis (EDA) 
+
+Installing load libraries.
+
+```{r}
+library (ggplot2)
+```
+
+Turns certain variables into factors.
+
+```{r}
+# Change Variable Sex, cp, fbs, restecg, exng, slp, caa, thall and output to factor
+
+heart_df$sex <-factor(heart_df$sex,
+                         levels = c(1,0),
+                         labels = c("Male","Female"))
+
+heart_df$cp <-factor(heart_df$cp,
+                      levels = c(1,2,3,0),
+                      labels = c("Typical","atypical",
+                                 "non anginal", "asymptomatic"))
+
+heart_df$fbs <-factor(heart_df$fbs,
+                      levels = c(1,0),
+                      labels = c(">120 mg/dl","< 120 mg/dl"))
+
+heart_df$restecg <-factor(heart_df$restecg,
+                      levels = c(0,1,2),
+                      labels = c("hypertrophy","ST-T Wave Abnormality", "Normal"))
+
+heart_df$exng <-factor(heart_df$exng,
+                          levels = c(0,1),
+                          labels = c("Yes","No"))
+
+heart_df$slp <-factor(heart_df$slp,
+                       levels = c(0,1,2),
+                       labels = c("downsloping","flat", "upsloping"))
+
+heart_df$caa <-factor(heart_df$caa,
+                      levels = c(0,1,2,3),
+                      labels = c("0","1","2","3"))
+
+heart_df$thall <-factor(heart_df$thall,
+                      levels = c(1,2,3),
+                      labels = c("fixed defect","normal","reversable defect"))
+
+heart_df$output <-factor(heart_df$output,
+                         levels = c(1,0),
+                         labels = c("More","Less"))
+```
+
+# 2.1. Univariate Analysis  
+
+This part is making Univariate.
+
+```{r}
+ggplot(heart_df, aes(x=age, y=..count..)) + 
+  geom_histogram(binwidth = 2, 
+                 fill = "grey",
+                 color = "BLUE") + 
+  geom_density(color = "Red") + 
+  ggtitle("Age") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+plottingbar = function(x_column, label){
+  ggplot(heart_df, aes(x = x_column)) +
+    geom_bar()+
+    labs(x = NULL)  + 
+    ggtitle(paste (label))+
+    theme(plot.title = element_text(hjust = 0.5))
+}
+
+plottingbar(heart_df$sex, "Gender")
+plottingbar(heart_df$cp, "Chest Pain")
+plottingbar(heart_df$fbs, "Fasting Blood Sugar")
+plottingbar(heart_df$restecg, "Resting Electocardiograph")
+plottingbar(heart_df$exng, "excercise induced angina")
+plottingbar(heart_df$slp, "The Slope of peak Excercise ST Seg.")
+plottingbar(heart_df$caa, "number of mayor vassel")
+plottingbar(heart_df$thall, "Thallium Stress Test")
+plottingbar(heart_df$output, "Output")
+
+plottingbp = function(y_row, label, unit){
+  ggplot(heart_df, aes(y = y_row))+
+    geom_boxplot()+
+    labs (y = paste(unit))+
+    ggtitle (paste(label))+
+    theme(plot.title = element_text(hjust = 0.5))
+}
+
+plottingbp(heart_df$age, "Age", "Age")
+plottingbp(heart_df$trtbps, "Resting Blood Pressure", "mmHg")
+plottingbp(heart_df$chol, "Serum Cholestoral", "mg/dl")
+plottingbp(heart_df$thalachh, "Maximum heart rate", "count")
+plottingbp(heart_df$oldpeak, "ST Depression induced by exercise relative to rest", "count")
+```
+
+# 2.2. Bivariate Analysis  
+
+This part is making Bivariate.
+
+```{r}
+# Factor Variable
+plotting1 = function(x_column, label){
+  ggplot(heart_df, aes(x = x_column, fill=output))+
+    geom_bar(alpha = 0.5)+
+    labs(title = paste(label, "vs Output"), 
+         x = label)+
+    theme (plot.title = element_text(hjust = 0.5))
+}
+
+plotting1(heart_df$sex, "Gender")
+plotting1(heart_df$cp, "Chest Pain")
+plotting1(heart_df$fbs, "Fasting Blood Sugar")
+plotting1(heart_df$restecg, "Resting Electocardiograph")
+plotting1(heart_df$exng, "excercise induced angina")
+plotting1(heart_df$slp, "The Slope of peak Excercise ST Seg.")
+plotting1(heart_df$caa, "number of mayor vassel")
+plotting1(heart_df$thall, "Thallium Stress Test")
+
+# Integer Variable
+plotting2 = function(x_column, label){
+  ggplot(heart_df, aes(x = x_column, fill=output))+
+    geom_density(alpha=0.2)+
+    labs(title = paste(label, "vs Output"), 
+         x = label)+
+    theme (plot.title = element_text(hjust = 0.5))
+}
+
+plotting2(heart_df$age, "Age")
+plotting2(heart_df$trtbps, "Resting Blood Press")
+plotting2(heart_df$chol, "Cholestoral")
+plotting2(heart_df$thalachh, "Maximum heart rate")
+plotting2(heart_df$oldpeak, "ST Depression induced by exercise relative to rest")
+```
+
+# 2.3. Multivariate Analysis  
+
+This part is making Multivariate.
+
+```{r}
+plottingpoint = function(x_axis,label_x, y_axis,label_y, shape, color){
+  ggplot(data = heart_df, aes (x = x_axis, 
+                               y= y_axis,
+                               shape = shape,
+                               color = color))+
+    geom_point()+
+    labs(x = label_x,
+         y = label_y)
+}
+
+plottingpoint(heart_df$age, "Age", heart_df$trtbps, "Resting Blood Pressure", heart_df$sex, heart_df$output)
+plottingpoint(heart_df$age, "Age", heart_df$chol, "Serum Cholestoral", heart_df$sex, heart_df$output)
+plottingpoint(heart_df$age, "Age", heart_df$thalachh, "Maximum heart rate", heart_df$sex, heart_df$output)
+plottingpoint(heart_df$age, "Age", heart_df$oldpeak, "ST Depression induced by exercise relative to rest", heart_df$sex, heart_df$output)
+```
+
+Change all factor variable to integer.
+
+```{r}
+heart_df$sex <-as.integer(heart_df$sex)
+heart_df$cp <-as.integer(heart_df$cp)
+heart_df$fbs <-as.integer(heart_df$fbs)
+heart_df$restecg <-as.integer(heart_df$restecg)
+heart_df$exng <-as.integer(heart_df$exng)
+heart_df$slp <-as.integer(heart_df$slp)
+heart_df$caa <-as.integer(heart_df$caa)
+heart_df$thall <-as.integer(heart_df$thall)
+```
+
+Pearson's Correlation Coefficient
+
+```{r}
+r <- cor(heart_df[1:13])
+r <- round(r,3)
+```
+
+Install the required packages.
+
+```{r}
+#install.packages("psych")
+library(psych)
+corPlot(heart_df[1:13], cex = 1.2)
+```
+
+# 3. Data Preparation  
+
+## 3. 1. Data Cleaning  
+
+This section is data cleaning.
+
+### 3.1.1. Get Outliers and remove Value in variable trtbps
+
+```{r}
+# Get Outliers and remove Value in variable trtbps
+out_trtbps <- boxplot.stats(heart_df$trtbps)$out
+out_idx1 <- which(heart_df$trtbps%in%c(out_trtbps))
+heart_df_dummy <- heart_df[-out_idx1,]
+```
+
+### 3.1.2. Get Outliers and remove Value in variable chol
+
+```{r}
+# Get Outliers and remove Value in variable chol
+out_chol <- boxplot.stats(heart_df_dummy$chol)$out
+out_idx2 <- which(heart_df_dummy$chol%in%c(out_chol))
+heart_df_dummy2 <- heart_df_dummy[-out_idx2,]
+```
+
+### 3.1.3. Get Outliers and remove Value in variable thalachh
+
+```{r}
+# Get Outliers and remove Value in variable thalachh
+out_thalachh <- boxplot.stats(heart_df_dummy2$thalachh)$out
+out_idx3 <- which(heart_df_dummy2$thalachh%in%c(out_thalachh))
+heart_df_dummy3 <- heart_df_dummy2[-out_idx3,]
+```
+
+### 3.1.4. Get Outliers and remove Value in variable oldpeak
+
+```{r}
+# Get Outliers and remove Value in variable oldpeak
+out_oldpeak <- boxplot.stats(heart_df_dummy3$oldpeak)$out
+out_idx4 <- which(heart_df_dummy3$oldpeak%in%c(out_oldpeak))
+heart_df_new <- heart_df_dummy3[-out_idx4,]
+```
+
+### 3.1.5. New Bloxplot without outliers
+
+```{r}
+# New Bloxplot without outliers
+ggplot(heart_df_dummy, aes(y = trtbps))+
+  geom_boxplot()+
+  labs (y = "mmHg")+
+  ggtitle ("Resting Blood Pressure New")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(heart_df_dummy2, aes(y = chol))+
+  geom_boxplot()+
+  labs (y = "mg/dl")+
+  ggtitle ("Serum Cholestoral New")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(heart_df_dummy3, aes(y = thalachh))+
+  geom_boxplot()+
+  labs (y = "count")+
+  ggtitle ("Maximum heart rate")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(heart_df_new, aes(y = oldpeak))+
+  geom_boxplot()+
+  labs (y = "count")+
+  ggtitle ("ST Depression induced by exercise relative to rest")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## 3. 2. Remove Rows With Missing Value  
+
+```{r}
+heart_df_new <- na.omit(heart_df_new)
+```
+
+## 3. 3. New Data Dimension  
+
+```{r}
+d <- dim(heart_df_new)
+m <- d[1] # m : number of rows
+n <- d[2] # n : number of columns
+```
+
+## 3. 4. Training and Testing Division  
+
+```{r}
+## Train:Test = 70:30
+set.seed(2021)
+
+train_idx <- sample(m, 0.7 * m)
+train_idx[1:3]
+
+train_data <- heart_df_new[ train_idx , ]
+test_data <- heart_df_new[ -train_idx , ]
+```
+
+# 4. Modeling 
+
+# 4.1. Logistic Regression  
+
+This part is making logistic regression.
+
+```{r}
+## Logistic Regression
+logit <- glm(formula = output ~.  ,
+             data = train_data,
+             family = binomial)
+summary(logit)
+```
+
+# 4.2. Decision Tree 
+
+This part is making a decision tree.
+
+```{r}
+## Decision Tree
+library(party)
+dt <- ctree(formula = output~.,
+            data = train_data)
+plot(dt)
+```
+
+# 4.3. Random Forest  
+
+This part is creating a random forest.
+
+```{r}
+## Random Forest
+library(randomForest)
+set.seed(2021)
+rf <- randomForest(formula = output ~.,
+                   data =train_data)
+rf
+```
+
+# 4.4. Support Vector Machine (SVM)  
+
+This part is creating a support vector machine.
+
+```{r}
+## Support Vector Machine (SVM)
+library(e1071)
+model.svm <- svm(formula = output ~.,
+                 data = train_data)
+model.svm
+```
+
+# 5. Evaluation  
+
+## Actual Value  
+
+This part is creating the actual value.  
+
+```{r}
+## Actual Value
+actual <- test_data$output
+```
+
+# 1. Predicted Output - Logistic Regression  
+
+This part is making logistic regression.
+
+```{r}
+# Predicted Output - Logistic Regression
+pred.prob <- predict(logit, test_data, type="response")
+pred.prob > 0.5
+pred.logit <- factor(pred.prob > 0.5,
+                     levels = c(TRUE,FALSE),
+                     labels = c("More","Less"))
+```
+
+# 2. Predicted Output - Decision Tree 
+
+This part is making decision tree.
+
+```{r}
+# Predicted Output - Decision Tree
+pred.dt <- predict(dt, test_data)
+```
+
+# 3. Predicted Output - Random Forest  
+
+This part is making random forest.
+
+```{r}
+# Prediction Output - Random Forest
+pred.rf <- predict(rf, test_data)
+```
+
+# 4. Predicted Output - SVM (Support Vector Machine)  
+
+This part is making SVM (Support Vector Machine).
+
+```{r}
+# Prediction Output - SVM
+pred.svm <- predict(model.svm, test_data)
+```
+
+# Confusion Matrix  
+
+This part is making Confusion Matrix.
+
+```{r}
+# Confusion Matrix
+table.logic <- table(actual, pred.logit,
+                     dnn = c("actual","predicted"))
+table.logic
+table.dt <- table(actual, pred.dt,
+                  dnn = c("actual","predicted"))
+table.dt
+table.rf <- table(actual, pred.rf,
+                  dnn = c("actual","predicted"))
+table.rf
+table.svm <- table(actual, pred.svm,
+                   dnn = c("actual","predicted"))
+table.svm
+```
+
+## Performance Evaluation  
+
+This section is to calculate the evaluation performance, using the classification method.
+
+```{r}
+## Performance Evaluation
+performance <- function(prediction, actual, method){
+  
+  #1 Create Confusion Matrix (cm)
+  cm <- table(actual, prediction,
+              dnn = c("actual","predicted"))
+  
+  #2. Extract TP, TN, FP, FN
+  TP <- cm[1,1]
+  TN <- cm[2,2]
+  FP <- cm[2,1]
+  FN <- cm[1,2]
+  
+  #3. Compute accuracy, precision, recall, f1score
+  accuracy <- (TP+TN) / (TP+TN+FP+FN)
+  precision <- TP/(FP+TP)
+  recall <- TP/(FN+TP)
+  f1score <- (2*precision*recall)/(precision+recall)
+  
+  #4. Prepare output function
+  result <-paste("***Method: ", method,
+                 "\n Accuracy = ", round(accuracy,3),
+                 "\n Precision = ", round(precision,3),
+                 "\n Recall = ", round(recall,3),
+                 "\n F1 Score = ", round(f1score,3))
+  cat (result)
+}
+
+performance(pred.logit, actual, "Logistic Regression")
+performance(pred.dt, actual, "Decision Tree")
+performance(pred.rf, actual, "Random Forest")
+performance(pred.svm, actual, "Support Vector Machine")
+```
+
+# 6. Recommendation 
+
+1. Support Vector Machine algorithm is the best among all the tested algorithms with precision 81,6%.
+
+2. However, the accuracy rate is only about 61.9% for the four algorithms used.
+
+3. The result can be improved by better data preparation to using other algorithms.
